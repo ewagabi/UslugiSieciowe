@@ -24,18 +24,20 @@ class Patient extends CI_Controller {
 			"email",
 			);
 
-		if (! check_params($params, $this->input->post())) {			
+		$data_in = get_input();
+
+		if (! check_params($params, $data_in)) {			
 			return;
 		}
 
 		$patient = new stdClass;
 
-		$patient->first_name = $this->input->post("first_name", TRUE);
-		$patient->last_name = $this->input->post("last_name", TRUE);
-		$patient->phone = $this->input->post("phone", TRUE);
-		$patient->gender = intval($this->input->post("gender", TRUE));
-		$patient->birthday = $this->input->post("birthday", TRUE);
-		$patient->email = $this->input->post("email", TRUE);
+		$patient->first_name = xss_clean($data_in["first_name"]);
+		$patient->last_name = xss_clean($data_in["last_name"]);
+		$patient->phone = xss_clean($data_in["phone"]);
+		$patient->gender = intval(xss_clean($data_in["gender"]));
+		$patient->birthday = xss_clean($data_in["birthday"]);
+		$patient->email = xss_clean($data_in["email"]);
 
 		// sprawdzenie poprawności danych
 
@@ -45,7 +47,7 @@ class Patient extends CI_Controller {
 
 		$insert_id = $this->Main_model->create_patient($patient);
 		if ($insert_id > 0) {
-			$this->output->set_output(json_encode(array("id" => $insert_id)));
+			$this->output->set_output(json_encode(array("id" => intval($insert_id))));
 		}
 	}
 
@@ -67,7 +69,7 @@ class Patient extends CI_Controller {
 					$patient->{$key} = xss_clean($value);
 					if (validate_patient($patient)) {
 						if ($this->Main_model->edit_patient($p_patient_id, $patient)) {
-							$this->output->set_output(json_encode($patient));
+							$this->output->set_output(json_encode($this->Main_model->get_patient($p_patient_id)));
 						}
 					}
 				}
@@ -87,7 +89,7 @@ class Patient extends CI_Controller {
 		$patient = $this->Main_model->get_patient($p_patient_id);
 		if (NULL != $patient) {
 			if ($this->Main_model->delete_patient($p_patient_id)) {
-				$this->output->set_output(json_encode(array("id" => $p_patient_id)));
+				$this->output->set_output(json_encode(array("id" => intval($p_patient_id))));
 			}
 		}
 	}

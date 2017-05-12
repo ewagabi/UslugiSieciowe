@@ -22,16 +22,18 @@ class Appointment extends CI_Controller {
 			"duration"
 			);
 
-		if (! check_params($params, $this->input->post())) {			
+		$data_in = get_input();
+
+		if (! check_params($params, $data_in)) {	
 			return;
 		}
 
 		$appointment = new stdClass;
 
-		$appointment->doctor_id = intval($this->input->post("doctor_id", TRUE));
-		$appointment->patient_id = intval($this->input->post("patient_id", TRUE));
-		$appointment->date = $this->input->post("date", TRUE);
-		$appointment->duration = $this->input->post("duration", TRUE);
+		$appointment->doctor_id = intval($data_in["doctor_id"]);
+		$appointment->patient_id = intval($data_in["patient_id"]);
+		$appointment->date = $data_in["date"];
+		$appointment->duration = $data_in["duration"];
 
 		// sprawdzenie poprawności danych
 
@@ -41,7 +43,7 @@ class Appointment extends CI_Controller {
 
 		$insert_id = $this->Main_model->create_appointment($appointment);
 		if ($insert_id > 0) {
-			$this->output->set_output(json_encode(array("id" => $insert_id)));
+			$this->output->set_output(json_encode(array("id" => intval($insert_id))));
 		}
 	}
 
@@ -64,7 +66,7 @@ class Appointment extends CI_Controller {
 
 					if (validate_appointment($appointment)) {
 						if ($this->Main_model->edit_appointment($p_appointment_id, $appointment)) {
-							$this->output->set_output(json_encode($appointment));
+							$this->output->set_output(json_encode($this->Main_model->get_appointment($p_appointment_id)));
 						}
 					}
 				}

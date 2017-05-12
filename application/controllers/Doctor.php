@@ -26,20 +26,22 @@ class Doctor extends CI_Controller {
 			"room"
 			);
 
-		if (! check_params($params, $this->input->post())) {	
+		$data_in = get_input();
+
+		if (! check_params($params, $data_in)) {	
 			return;
 		}
 
 		$doctor = new stdClass;
 
-		$doctor->speciality_id = intval($this->input->post("speciality_id", TRUE));
-		$doctor->first_name = $this->input->post("first_name", TRUE);
-		$doctor->last_name = $this->input->post("last_name", TRUE);
-		$doctor->phone = $this->input->post("phone", TRUE);
-		$doctor->gender = intval($this->input->post("gender", TRUE));
-		$doctor->birthday = $this->input->post("birthday", TRUE);
-		$doctor->email = $this->input->post("email", TRUE);
-		$doctor->room = $this->input->post("room", TRUE);
+		$doctor->speciality_id = intval(xss_clean($data_in["speciality_id"]));
+		$doctor->first_name = xss_clean($data_in["first_name"]);
+		$doctor->last_name = xss_clean($data_in["last_name"]);
+		$doctor->phone = xss_clean($data_in["phone"]);
+		$doctor->gender = intval(xss_clean($data_in["gender"]));
+		$doctor->birthday = xss_clean($data_in["birthday"]);
+		$doctor->email = xss_clean($data_in["email"]);
+		$doctor->room = xss_clean($data_in["room"]);
 
 		// sprawdzenie poprawności danych
 
@@ -49,7 +51,7 @@ class Doctor extends CI_Controller {
 
 		$insert_id = $this->Main_model->create_doctor($doctor);
 		if ($insert_id > 0) {
-			$this->output->set_output(json_encode(array("id" => $insert_id)));
+			$this->output->set_output(json_encode(array("id" => intval($insert_id))));
 		}
 	}
 
@@ -71,8 +73,7 @@ class Doctor extends CI_Controller {
 					$doctor->{$key} = xss_clean($value);
 					if (validate_doctor($doctor)) {
 						if ($this->Main_model->edit_doctor($p_doctor_id, $doctor)) {
-							$doctor->id = $p_doctor_id;
-							$this->output->set_output(json_encode($doctor));
+							$this->output->set_output(json_encode($this->Main_model->get_doctor($p_doctor_id)));
 						}
 					}
 				}
@@ -108,6 +109,7 @@ class Doctor extends CI_Controller {
 
 		$doctor = $this->Main_model->get_doctor($p_doctor_id);
 		if (NULL != $doctor) {
+			unset($doctor->id);
 			$this->output->set_output(json_encode($doctor));
 		}
 	}

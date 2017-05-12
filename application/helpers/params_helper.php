@@ -79,11 +79,11 @@ function validate_appointment($p_appointment) {
 		return FALSE;
 	}
 
-	if (NULL == $ci->Main_model->get_doctor($p_appointment->DOCTOR_id)) {
+	if (NULL == $ci->Main_model->get_doctor($p_appointment->doctor_id)) {
 		return FALSE;
 	}
 
-	if (NULL == $ci->Main_model->get_patient($p_appointment->PATIENT_id)) {
+	if (NULL == $ci->Main_model->get_patient($p_appointment->patient_id)) {
 		return FALSE;
 	}
 
@@ -140,20 +140,95 @@ function validate_price($p_price) {
 }
 
 function get_input() {
-	$ci =& get_instance();
+	return json_decode(file_get_contents("php://input"), true);
+}
 
-	switch($ci->input->method(TRUE)) {
-		case 'GET':
-			return $ci->input->get();
+function format_doctor($p_doctor) {
+	/*
+	"id": 1,
+	"speciality_id": 1,
+	"first_name": "John",
+	"last_name": "Doe",
+	"phone": "987654321",
+	"gender": 1,
+	"birthday": "1980-04-07",
+	"email": "john.doe@example.com",
+	"room": "12a"
+	*/
 
-		case 'POST':
-			return $ci->input->post();
+	$doc_obj = new stdClass;
 
-		case 'PUT':
-		case 'DELETE':
-			return $ci->input->input_stream();
-	}
-	return array();
+	$doc_obj->id = intval($p_doctor->id);
+	$doc_obj->speciality_id = intval($p_doctor->SPECIALITY_id);
+	$doc_obj->first_name = $p_doctor->first_name;
+	$doc_obj->last_name = $p_doctor->last_name;
+	$doc_obj->phone = $p_doctor->phone;
+	$doc_obj->gender = intval($p_doctor->gender);
+	$doc_obj->birthday = $p_doctor->birthday;
+	$doc_obj->email = $p_doctor->email;
+	$doc_obj->room = $p_doctor->room;
+
+	return $doc_obj;
+}
+
+function format_patient($p_patient) {
+	/*
+	"id": 2,
+	"first_name": "Anna",
+	"last_name": "Kowalsky",
+	"phone": "888999000",
+	"gender": 0,
+	"birthday": "1980-04-12",
+	"email": "anna.doe@example.com"
+	*/
+
+	$pat_obj = new stdClass;
+
+	$pat_obj->id = intval($p_patient->id);
+	$pat_obj->first_name = $p_patient->first_name;
+	$pat_obj->last_name = $p_patient->last_name;
+	$pat_obj->phone = $p_patient->phone;
+	$pat_obj->gender = intval($p_patient->gender);
+	$pat_obj->birthday = $p_patient->birthday;
+	$pat_obj->email = $p_patient->email;
+
+	return $pat_obj;
+}
+
+function format_appointment($p_appointment) {
+	/*
+	"id": 1,
+	"doctor_id": 1,
+	"patient_id": 2,
+	"date": "2018-08-28 09:00:00",
+	"duration": "00:12:00"
+	*/
+
+	$app_obj = new stdClass;
+
+	$app_obj->id = intval($p_appointment->id);
+	$app_obj->doctor_id = intval($p_appointment->DOCTOR_id);
+	$app_obj->patient_id = intval($p_appointment->PATIENT_id);
+	$app_obj->date = $p_appointment->date;
+	$app_obj->duration = $p_appointment->duration;
+
+	return $app_obj;
+}
+
+function format_speciality($p_speciality) {
+	/*
+	"id": 1,
+	"name": "Internist",
+	"price_per_appointment": "150.00"
+	*/
+
+	$spec_obj = new stdClass;
+
+	$spec_obj->id = intval($p_speciality->id);
+	$spec_obj->name = $p_speciality->name;
+	$spec_obj->price_per_appointment = $p_speciality->price_per_appointment;
+
+	return $spec_obj;
 }
 
 ?>

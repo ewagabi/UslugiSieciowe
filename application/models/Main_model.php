@@ -22,7 +22,8 @@ class Main_model extends CI_Model {
 
 	public function get_doctor($p_doctor_id) {
 		$this->db->select("
-			speciality_id,
+			id,
+			SPECIALITY_id,
 			first_name,
 			last_name,
 			phone,
@@ -31,7 +32,11 @@ class Main_model extends CI_Model {
 			email,
 			room
 			");
-		return $this->db->where("id", $p_doctor_id)->get($this->doctor_table)->row();
+		$doctor = $this->db->where("id", $p_doctor_id)->get($this->doctor_table)->row();
+		if (NULL != $doctor) {
+			$doctor = format_doctor($doctor);
+		}
+		return $doctor;
 	}
 
 	public function create_doctor($p_doctor) {
@@ -41,7 +46,7 @@ class Main_model extends CI_Model {
 
 	public function edit_doctor($p_doctor_id, $doctor) {
 		$this->db->where("id", $p_doctor_id)->update($this->doctor_table, $doctor);
-		return $this->db->affected_rows() == 1;
+		return true;
 	}
 
 	public function delete_doctor($p_doctor_id) {
@@ -50,38 +55,56 @@ class Main_model extends CI_Model {
 	}
 
 	public function read_all_doctors() {
-		return $this->db->get($this->doctor_table)
-			->result();
+		$arr = $this->db->get($this->doctor_table)->result();
+		foreach ($arr as &$doctor) {
+			$doctor = format_doctor($doctor);
+		}
+		return $arr; 
 	}
 
 	public function get_doctor_appointments($p_doctor_id) {
-		return $this->db->where("DOCTOR_id", $p_doctor_id)
+		$arr = $this->db->where("DOCTOR_id", $p_doctor_id)
 			->get($this->appointment_table)
 			->result();
+
+		foreach ($arr as &$app) {
+			$app = format_appointment($app);
+		}
+		return $arr;
 	}
 
 	public function get_doctor_appointments_by_date($p_doctor_id, $date) {
-		return $this->db->where("DOCTOR_id", $p_doctor_id)
+		$arr = $this->db->where("DOCTOR_id", $p_doctor_id)
 			->where("DATE(date) = \"$date\"")
 			->get($this->appointment_table)
 			->result();
+
+		foreach ($arr as &$app) {
+			$app = format_appointment($app);
+		}
+		return $arr;
 	}
 
 	public function get_doctor_appointment($p_doctor_id, $p_appointment_id) {
-		return $this->db->where("id", $p_appointment_id)
+		$app = $this->db->where("id", $p_appointment_id)
 			->where("DOCTOR_id", $p_doctor_id)
 			->get($this->appointment_table)
 			->row();
-	}
-
-	public function get_appointment($p_appointment_id) {
-		return $this->db->where("id", $p_appointment_id)->get($this->appointment_table)->row();
+		if (NULL != $app) {
+			$app = format_appointment($app);
+		}
+		return $app;
 	}
 
 	public function get_doctors_by_speciality($p_speciality_id) {
-		return $this->db->where("SPECIALITY_id", $p_speciality_id)
+		$arr = $this->db->where("SPECIALITY_id", $p_speciality_id)
 			->get($this->doctor_table)
 			->result();
+
+		foreach ($arr as &$doctor) {
+			$doctor = format_doctor($doctor);
+		}
+		return $arr;
 	}
 
 	/*
@@ -98,7 +121,11 @@ class Main_model extends CI_Model {
 			birthday,
 			email,
 			");
-		return $this->db->where("id", $p_patient_id)->get($this->patient_table)->row();
+		$patient = $this->db->where("id", $p_patient_id)->get($this->patient_table)->row();
+		if (NULL != $patient) {
+			$patient = format_patient($patient);
+		}
+		return $patient;
 	}
 
 	public function create_patient($p_patient) {
@@ -108,7 +135,8 @@ class Main_model extends CI_Model {
 
 	public function edit_patient($p_patient_id, $patient) {
 		$this->db->where("id", $p_patient_id)->update($this->patient_table, $patient);
-		return $this->db->affected_rows() == 1;
+		// if ($this->db->affected_rows() == 1 || 
+		return true;
 	}
 
 	public function delete_patient($p_patient_id) {
@@ -117,25 +145,40 @@ class Main_model extends CI_Model {
 	}
 
 	public function read_all_patients() {
-		return $this->db->get($this->patient_table)
+		$arr = $this->db->get($this->patient_table)
 			->result();
+
+		foreach ($arr as &$patient) {
+			$patient = format_patient($patient);
+		}
+		return $arr;
 	}
 
 	public function get_patient_appointments($p_patient_id) {
-		return $this->db->where("PATIENT_id", $p_patient_id)
+		$arr = $this->db->where("PATIENT_id", $p_patient_id)
 			->get($this->appointment_table)
 			->result();
+
+		foreach ($arr as &$app) {
+			$app = format_appointment($app);
+		}
+		return $arr;
 	}
 
 	public function get_patient_appointments_by_date($p_patient_id, $date) {
-		return $this->db->where("PATIENT_id", $p_patient_id)
+		$arr = $this->db->where("PATIENT_id", $p_patient_id)
 			->where("DATE(date) = \"$date\"")
 			->get($this->appointment_table)
 			->result();
+
+		foreach ($arr as &$app) {
+			$app = format_appointment($app);
+		}
+		return $arr;
 	}
 
 	public function get_patient_appointments_by_speciality($p_patient_id, $p_speciality_id) {
-		return $this->db->select("
+		$arr = $this->db->select("
 				$this->appointment_table.id, DOCTOR_id, PATIENT_id, date, duration 
 			")
 			->where("PATIENT_id", $p_patient_id)
@@ -144,13 +187,23 @@ class Main_model extends CI_Model {
 			->join($this->doctor_table, "DOCTOR_id = ".$this->doctor_table.".id")
 			->get($this->appointment_table)
 			->result();
+
+		foreach ($arr as &$app) {
+			$app = format_appointment($app);
+		}
+		return $arr;
 	}
 
 	public function get_patient_appointment($p_patient_id, $p_appointment_id) {
-		return $this->db->where("id", $p_appointment_id)
+		$app = $this->db->where("id", $p_appointment_id)
 			->where("patient_id", $p_patient_id)
 			->get($this->appointment_table)
 			->row();
+
+		if (NULL != $app) {
+			$app = format_appointment($app);
+		}
+		return $app;
 	}
 
 
@@ -165,7 +218,7 @@ class Main_model extends CI_Model {
 
 	public function edit_appointment($p_appointment_id, $appointment) {
 		$this->db->where("id", $p_appointment_id)->update($this->appointment_table, $appointment);
-		return $this->db->affected_rows() == 1;
+		return true;
 	}
 
 	public function delete_appointment($p_appointment_id) {
@@ -173,9 +226,22 @@ class Main_model extends CI_Model {
 		return $this->db->affected_rows() == 1;
 	}
 
+	public function get_appointment($p_appointment_id) {
+		$app = $this->db->where("id", $p_appointment_id)->get($this->appointment_table)->row();
+		if (NULL != $app) {
+			$app = format_appointment($app);
+		}
+		return $app;
+	}
+
 	public function read_all_appointments() {
-		return $this->db->get($this->appointment_table)
+		$arr = $this->db->get($this->appointment_table)
 			->result();
+
+		foreach ($arr as &$app) {
+			$app = format_appointment($app);
+		}
+		return $arr;
 	}
 
 
@@ -185,7 +251,7 @@ class Main_model extends CI_Model {
 
 	public function edit_speciality($p_speciality_id, $speciality) {
 		$this->db->where("id", $p_speciality_id)->update($this->speciality_table, $speciality);
-		return $this->db->affected_rows() == 1;
+		return true;
 	}
 
 	public function delete_speciality($p_speciality_id) {
@@ -194,12 +260,21 @@ class Main_model extends CI_Model {
 	}
 
 	public function get_speciality($p_speciality_id) {
-		return $this->db->where("id", $p_speciality_id)->get($this->speciality_table)->row();
+		$spec = $this->db->where("id", $p_speciality_id)->get($this->speciality_table)->row();
+		if (NULL != $spec) {
+			$spec = format_speciality($spec);
+		}
+		return $spec;
 	}
 
 	public function read_all_specialities() {
-		return $this->db->get($this->speciality_table)
+		$arr = $this->db->get($this->speciality_table)
 			->result();
+
+		foreach ($arr as &$spec) {
+			$spec = format_speciality($spec);
+		}
+		return $arr;
 	}
 }
 
